@@ -1,12 +1,13 @@
+# Authors: Sam Mard, Owen Pallatroni
+# Attributions: Used Gemini and Claude to help implement camera functionality
+
 import numpy as np
 import cv2
 from picamera2 import Picamera2
 import RPi.GPIO as GPIO
 import time
 
-# --- GPIO Setup (BCM numbering) ---
-# Left motor:  ENA=GPIO25, IN1=GPIO8, IN2=GPIO7
-# Right motor: IN3=GPIO14, IN4=GPIO15, ENB=GPIO18
+# GPIO Setup
 ena, in1, in2 = 25, 8, 7
 enb, in3, in4 = 18, 14, 15
 
@@ -26,28 +27,28 @@ def set_motors(left_speed, right_speed):
         GPIO.output(in1, GPIO.LOW); GPIO.output(in2, GPIO.HIGH)
     motorL.ChangeDutyCycle(min(abs(left_speed), 100))
 
-    # Right motor — IN3/IN4 flipped to correct opposite-direction wiring
+    # Right motor 
     if right_speed >= 0:
         GPIO.output(in3, GPIO.LOW); GPIO.output(in4, GPIO.HIGH)
     else:
         GPIO.output(in3, GPIO.HIGH); GPIO.output(in4, GPIO.LOW)
     motorR.ChangeDutyCycle(min(abs(right_speed), 100))
 
-# --- Camera Setup ---
+# Camera Setup
 picam2 = Picamera2()
 config = picam2.create_preview_configuration(main={"size": (640, 480)})
 picam2.configure(config)
 picam2.start()
 time.sleep(1)
 
-# --- Calibrated Green Color Range ---
-# --- Calibrated Yellow Line Color Range ---
+# Color HSV value calibration
 lower_color = np.array([15, 110, 90])
 upper_color = np.array([105, 255, 255])
 
 lower_orange = np.array([10, 150, 150])
 upper_orange = np.array([25, 255, 255])
-# --- Tuning Parameters ---
+
+# Tuning Parameters
 BASE_SPEED = 40    # Minimum reliable speed above stall threshold
 KP = 0.1          # Proportional gain — how hard it corrects based on error size
 KD = 0.06        # Derivative gain — how hard it corrects based on how fast error changes
@@ -57,7 +58,7 @@ FRAME_CENTER = 320 # Horizontal center of 640px frame
 
 last_error = 0
 
-# --- Try to open display window (works in VNC, skipped over SSH) ---
+# Opening Display window
 USE_DISPLAY = True
 try:
     test = np.zeros((10, 10), dtype=np.uint8)
@@ -92,7 +93,7 @@ try:
         M = cv2.moments(mask)
 
         if M['m00'] > 0:
-            # --- Line found: steer toward it using PD control ---
+            # Line found: steer toward it using PD control
             cx = int(M['m10'] / M['m00'])
             error = cx - FRAME_CENTER        # Negative = line left, Positive = line right
             derivative = error - last_error  # Rate of change of error
@@ -109,7 +110,7 @@ try:
             print(f"Following | cx: {cx} | error: {error:+d} | deriv: {derivative:+d} | L: {left_speed:.1f} R: {right_speed:.1f}")
 
         else:
-            # --- Line lost: turn right to catch the acute-angle green turn ---
+            # Line lost: turn right to catch the acute-angle green turn
             set_motors(SPIN_SPEED, SPIN_SPEED)   # Left wheel forward, right wheel back = turn right
             last_error = 0
             print("Line lost — turning right to search...")
