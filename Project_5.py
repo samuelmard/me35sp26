@@ -1,3 +1,7 @@
+# Authors: Sam Mard, Jack Huang
+# Contributions: Used Gemini and Airtable Documentation to build a usable
+# Airtable interface that conncted to pi
+
 import requests
 import rclpy
 from rclpy.node import Node
