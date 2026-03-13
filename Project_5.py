@@ -1,7 +1,3 @@
-# Authors: Sam Mard, Jack Huang
-# Contributions: Used Gemini and Airtable Documentation to build a usable
-# Airtable interface that conncted to pi
-
 import requests
 import rclpy
 from rclpy.node import Node
@@ -9,7 +5,7 @@ from geometry_msgs.msg import Twist
 
 # Airtable Config
 URL = 'https://api.airtable.com/v0/appaJO2dIW2rN53qb/Table 2'
-# HEADERS = {'Authorization':'Bearer (PERSONAL ACCESS TOKEN)'}
+HEADERS = {'Authorization':'Bearer patlq7yvcc4QhLCwj.df57a57c676cae3932394b1017b9ac273ef0e20a9ef6f0dba53c71218ddd4c1ba'}
 
 class AirtableJsonController(Node):
     def __init__(self):
